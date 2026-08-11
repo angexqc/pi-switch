@@ -1,0 +1,38 @@
+appId: com.piswitch.app
+productName: PiSwitch
+copyright: Copyright © 2026 PiSwitch
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist/main/**/*
+  - dist/renderer/**/*
+  - package.json
+extraResources:
+  - from: resources
+    to: .
+    filter:
+      - '**/*'
+asar: true
+asarUnpack:
+  - node_modules/better-sqlite3/build/**/*
+win:
+  icon: build/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: PiSwitch
+portable:
+  artifactName: PiSwitch-${version}-portable.${ext}
+electronDownload:
+  mirror: https://npmmirror.com/mirrors/electron/
+npmRebuild: true

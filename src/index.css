@@ -1,0 +1,1401 @@
+/* ============================================================
+   PiSwitch 设计系统 —— "运控台 / Mission Control" 美学
+   深色近黑底座 + 发丝网格 + 青绿主色 / 琥珀点缀 / 等宽读数
+   ============================================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI Variable Text', 'Segoe UI', 'Microsoft YaHei UI', 'Microsoft YaHei', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---------- 主题变量 ---------- */
+:root,
+[data-theme='dark'] {
+  --ps-bg: #0a0e13;
+  --ps-surface: #10161d;
+  --ps-surface-2: #141c25;
+  --ps-border: #1e2a36;
+  --ps-border-strong: #2a3a4a;
+  --ps-text: #dbe6ee;
+  --ps-text-dim: #8394a3;
+  --ps-text-faint: #5c6b79;
+  --ps-accent: #35d0ba;
+  --ps-accent-soft: rgba(53, 208, 186, 0.14);
+  --ps-amber: #f5b942;
+  --ps-coral: #ff8a5c;
+  --ps-ice: #5b9dff;
+  --ps-danger: #ff6b6b;
+  --ps-ok: #5ee08a;
+  --ps-shadow: 0 10px 34px rgba(0, 0, 0, 0.45);
+  --ps-glow-accent: 0 0 0 1px rgba(53, 208, 186, 0.35), 0 0 18px rgba(53, 208, 186, 0.18);
+  color-scheme: dark;
+}
+
+[data-theme='light'] {
+  --ps-bg: #f2f5f7;
+  --ps-surface: #ffffff;
+  --ps-surface-2: #f7fafb;
+  --ps-border: #dbe4ea;
+  --ps-border-strong: #c3d0da;
+  --ps-text: #18222c;
+  --ps-text-dim: #5b6b79;
+  --ps-text-faint: #8b99a5;
+  --ps-accent: #0f9d8a;
+  --ps-accent-soft: rgba(15, 157, 138, 0.12);
+  --ps-amber: #c98a1b;
+  --ps-coral: #d95f2b;
+  --ps-ice: #2f6fd6;
+  --ps-danger: #d64545;
+  --ps-ok: #1e9e50;
+  --ps-shadow: 0 10px 30px rgba(30, 45, 60, 0.12);
+  --ps-glow-accent: 0 0 0 1px rgba(15, 157, 138, 0.28), 0 0 14px rgba(15, 157, 138, 0.14);
+  color-scheme: light;
+}
+
+/* ---------- 应用底座 ---------- */
+#root {
+  background-color: var(--ps-bg);
+}
+
+.ps-app-shell {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--ps-bg);
+  position: relative;
+  overflow: hidden;
+}
+
+
+.ps-shell-inner {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+/* ---------- 侧栏 ---------- */
+.ps-sider {
+  width: 212px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--ps-border);
+  background: color-mix(in srgb, var(--ps-surface) 72%, transparent);
+  backdrop-filter: blur(14px);
+  padding: 14px 10px;
+  gap: 4px;
+}
+
+.ps-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px 18px;
+}
+
+.ps-brand-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--ps-accent), #1e9e8c);
+  color: #06121a;
+  font-weight: 800;
+  font-size: 15px;
+  box-shadow: var(--ps-glow-accent);
+}
+
+.ps-brand-name {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--ps-text);
+  font-family: 'Segoe UI Variable Display', 'Bahnschrift', 'Microsoft YaHei UI', sans-serif;
+}
+
+.ps-brand-sub {
+  font-size: 10px;
+  color: var(--ps-text-faint);
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+/* 侧栏菜单 */
+.ps-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ps-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  color: var(--ps-text-dim);
+  font-size: 13.5px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.16s ease;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+}
+
+.ps-nav-item:hover {
+  color: var(--ps-text);
+  background: color-mix(in srgb, var(--ps-surface-2) 70%, transparent);
+}
+
+.ps-nav-item.active {
+  color: var(--ps-accent);
+  background: var(--ps-accent-soft);
+  border-color: color-mix(in srgb, var(--ps-accent) 32%, transparent);
+  font-weight: 600;
+}
+
+.ps-nav-item .anticon {
+  font-size: 15px;
+}
+
+.ps-nav-item .nav-kbd {
+  margin-left: auto;
+  font-family: 'Cascadia Code', Consolas, monospace;
+  font-size: 10px;
+  color: var(--ps-text-faint);
+  background: color-mix(in srgb, var(--ps-border) 45%, transparent);
+  padding: 1px 6px;
+  border-radius: 5px;
+}
+
+.ps-sider-actions {
+  padding: 8px 12px 4px;
+}
+
+/* 左下角：操作按钮 + 状态信息 */
+.ps-foot-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 0 8px;
+}
+
+.ps-side-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--ps-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ps-text-dim);
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ps-side-btn:hover {
+  border-color: var(--ps-accent);
+  color: var(--ps-accent);
+  background: color-mix(in srgb, var(--ps-accent) 8%, transparent);
+}
+
+.ps-side-btn.active {
+  border-color: var(--ps-accent);
+  color: var(--ps-accent);
+  background: color-mix(in srgb, var(--ps-accent) 12%, transparent);
+}
+
+.ps-side-btn .anticon {
+  font-size: 15px;
+}
+
+.ps-sider-foot {
+  margin-top: auto;
+  padding: 10px 12px;
+  border-top: 1px solid var(--ps-border);
+}
+
+
+/* ---------- 主内容 ---------- */
+.ps-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-content {
+  flex: 1;
+  overflow: auto;
+  padding: 20px 24px 32px;
+}
+
+.page {
+  max-width: 1280px;
+  margin: 0 auto;
+  animation: ps-fade-in 0.28s ease both;
+}
+
+@keyframes ps-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.page-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: nowrap;
+}
+
+.page-title .title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ps-text);
+  letter-spacing: 0.3px;
+  font-family: 'Segoe UI Variable Display', 'Bahnschrift', 'Microsoft YaHei UI', sans-serif;
+}
+
+.page-title .title-desc {
+  font-size: 12px;
+  color: var(--ps-text-faint);
+  margin-top: 2px;
+  font-weight: 400;
+}
+
+/* ---------- 卡片 ---------- */
+/* Agent 配置卡片：头部固定，供应商网格内部滚动 */
+.ps-agent-config-card {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 235px);
+  min-height: 320px;
+}
+
+.ps-agent-config-card > .ps-card-head {
+  flex-shrink: 0;
+}
+
+.ps-agent-config-card > .ps-card-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.ps-card {
+  background: var(--ps-surface);
+  border: 1px solid var(--ps-border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ps-card:hover {
+  border-color: var(--ps-border-strong);
+}
+
+.ps-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--ps-border);
+}
+
+.ps-card-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ps-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ps-card-body {
+  padding: 14px 16px;
+}
+
+/* antd 卡片覆写 */
+.ant-card {
+  background: var(--ps-surface) !important;
+  border-color: var(--ps-border) !important;
+  border-radius: 12px !important;
+  box-shadow: none;
+}
+
+.ant-card-head {
+  border-bottom-color: var(--ps-border) !important;
+}
+
+.ant-card-head-title {
+  color: var(--ps-text) !important;
+  font-weight: 600;
+}
+
+/* ---------- Agent Tabs ---------- */
+.ps-agent-tabs .ant-tabs-nav {
+  margin-bottom: 16px;
+}
+
+.ps-agent-tabs .ant-tabs-tab {
+  padding: 10px 16px !important;
+  border-radius: 10px 10px 0 0;
+  transition: background 0.16s ease;
+}
+
+.ps-agent-tabs .ant-tabs-tab:hover {
+  background: color-mix(in srgb, var(--ps-surface-2) 60%, transparent);
+}
+
+.ps-agent-tabs .ant-tabs-tab .agent-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--ps-text-dim);
+}
+
+.ps-agent-tabs .ant-tabs-tab-active .agent-tab {
+  color: var(--ps-text);
+}
+
+.ps-agent-tabs .ant-tabs-tab .agent-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.ps-agent-tabs .ant-tabs-ink-bar {
+  height: 2.5px;
+  border-radius: 2px;
+}
+
+/* ---------- 绑定行 ---------- */
+.ps-binding-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+  padding: 10px 2px;
+}
+
+.ps-binding-row .ps-bind-label {
+  min-width: 66px;
+  font-size: 12.5px;
+  color: var(--ps-text-dim);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* 卡片头部内的开关（启用 / 精确统计），右上角 */
+.ps-head-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--ps-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ps-border) 30%, transparent);
+}
+
+.ps-head-toggle .ps-bind-label {
+  min-width: 0;
+  font-size: 12px;
+  text-align: left;
+  color: var(--ps-text-dim);
+}
+
+/* 绑定精调行（卡片底部） */
+.ps-binding-bottom {
+  border-top: 1px dashed var(--ps-border);
+  margin-top: 4px;
+  padding-top: 12px;
+}
+
+/* ---------- 状态灯 / 标签 ---------- */
+.ps-lamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ps-text-dim);
+  padding: 2px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--ps-border);
+  background: color-mix(in srgb, var(--ps-surface-2) 60%, transparent);
+  white-space: nowrap;
+}
+
+.ps-lamp .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ps-text-faint);
+}
+
+.ps-lamp.ok .dot {
+  background: var(--ps-ok);
+  box-shadow: 0 0 8px var(--ps-ok);
+}
+
+.ps-lamp.warn .dot {
+  background: var(--ps-amber);
+  box-shadow: 0 0 8px var(--ps-amber);
+}
+
+.ps-lamp.on .dot {
+  background: var(--ps-accent);
+  box-shadow: 0 0 8px var(--ps-accent);
+}
+
+/* ---------- 源码编辑器 ---------- */
+.ps-code-editor {
+  border: 1px solid var(--ps-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #0b1016;
+  font-family: 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: #c9d8e4;
+  tab-size: 2;
+}
+
+.ps-code-editor textarea {
+  background: transparent !important;
+  color: #c9d8e4 !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  tab-size: inherit;
+  caret-color: var(--ps-accent);
+}
+
+.ps-code-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: color-mix(in srgb, var(--ps-surface-2) 70%, transparent);
+  border-bottom: 1px solid var(--ps-border);
+  flex-wrap: nowrap;
+}
+
+/* ---------- 统计卡 ---------- */
+.ps-stat {
+  position: relative;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--ps-surface);
+  border: 1px solid var(--ps-border);
+  overflow: hidden;
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+
+.ps-stat:hover {
+  transform: translateY(-2px);
+  border-color: var(--ps-border-strong);
+}
+
+.ps-stat::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--stat-color, var(--ps-accent));
+  box-shadow: 0 0 12px var(--stat-color, var(--ps-accent));
+}
+
+.ps-stat .label {
+  font-size: 12px;
+  color: var(--ps-text-dim);
+  margin-bottom: 6px;
+  letter-spacing: 0.4px;
+}
+
+.ps-stat .value {
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--ps-text);
+  font-family: 'Segoe UI Variable Display', 'Bahnschrift', 'Microsoft YaHei UI', sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.ps-stat .sub {
+  font-size: 11px;
+  color: var(--ps-text-faint);
+  margin-top: 4px;
+}
+
+/* ---------- 布局工具类 ---------- */
+.card-grid {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.card-grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.card-grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.card-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.stat-sub {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--ps-text-dim);
+  font-weight: 400;
+}
+
+.import-source-block {
+  margin-bottom: 12px;
+}
+
+@media (max-width: 1100px) {
+  .card-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .card-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mt16 {
+  margin-top: 16px;
+}
+.mb16 {
+  margin-bottom: 16px;
+}
+.mono {
+  font-family: 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+  font-size: 12px;
+}
+
+/* ---------- cc-switch 风格：供应商卡片网格 ---------- */
+.ps-provider-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+  padding: 4px 16px 16px;
+}
+
+.ps-provider-card {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  padding: 14px 14px 12px;
+  border: 1px solid var(--ps-border);
+  border-radius: 12px;
+  background: var(--ps-surface);
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  overflow: hidden;
+}
+
+.ps-provider-card:hover {
+  border-color: var(--ps-accent);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--ps-accent) 18%, transparent);
+  transform: translateY(-1px);
+}
+
+.ps-provider-card.current {
+  border-color: var(--ps-accent);
+  background: color-mix(in srgb, var(--ps-accent) 7%, var(--ps-surface));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ps-accent) 35%, transparent) inset;
+}
+
+.ps-provider-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ps-provider-avatar {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.ps-provider-id {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.ps-provider-title {
+  font-size: 14px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ps-provider-card-ops {
+  flex: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.ps-provider-card:hover .ps-provider-card-ops,
+.ps-provider-card.current .ps-provider-card-ops {
+  opacity: 1;
+}
+
+.ps-provider-current-badge {
+  flex: none;
+  font-size: 11px;
+  line-height: 1;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: var(--ps-accent);
+  border: 1px solid color-mix(in srgb, var(--ps-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--ps-accent) 12%, transparent);
+}
+
+.ps-provider-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ps-provider-meta .ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ps-provider-models {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 24px;
+  align-items: center;
+}
+
+.ps-model-chip {
+  font-size: 11px;
+  font-family: 'Cascadia Code', Consolas, monospace;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--ps-border);
+  background: color-mix(in srgb, var(--ps-border) 40%, transparent);
+  color: var(--ps-text-dim);
+  white-space: nowrap;
+}
+
+.ps-model-chip.more {
+  border-style: dashed;
+  color: var(--ps-accent);
+}
+
+.ps-provider-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 2px;
+}
+
+.ps-inuse {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ps-accent);
+}
+
+/* ---------- antd 细节覆写 ---------- */
+.ant-modal .ant-modal-content {
+  background: var(--ps-surface);
+  border: 1px solid var(--ps-border);
+  border-radius: 14px;
+}
+
+.ant-modal .ant-modal-header {
+  background: transparent;
+}
+
+.ant-modal .ant-modal-title {
+  color: var(--ps-text);
+  font-weight: 700;
+}
+
+.ant-select-dropdown,
+.ant-picker-dropdown {
+  border-radius: 10px;
+}
+
+.ant-table {
+  font-size: 12.5px;
+}
+
+.ant-table-thead > tr > th {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ant-tag {
+  border-radius: 6px;
+}
+
+/* 数字表格右对齐的窄列不再换行 */
+.ant-table-cell {
+  white-space: nowrap;
+}
+
+/* 滚动条 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ps-border-strong);
+  border-radius: 6px;
+  border: 2px solid var(--ps-bg);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 弹窗遮罩毛玻璃 */
+.ant-modal-mask {
+  backdrop-filter: blur(3px);
+}
+
+/* ---------- 扩展中心 ---------- */
+.ps-version-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.ps-version-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--ps-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--ps-surface-2) 60%, var(--ps-surface));
+}
+
+.ps-version-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+}
+
+.ps-version-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.ps-version-num {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ps-text);
+}
+
+.ps-version-miss {
+  font-size: 13px;
+  color: var(--ps-danger);
+}
+
+.ps-version-cmd {
+  font-size: 11px;
+  word-break: break-all;
+}
+
+.ps-group-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ps-text-dim);
+  margin-bottom: 8px;
+  padding-left: 2px;
+  border-left: 3px solid var(--ps-accent);
+  padding-left: 8px;
+}
+
+.ps-skill-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.ps-skill-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--ps-border);
+  border-radius: 10px;
+  background: var(--ps-surface);
+}
+
+.ps-skill-card:hover {
+  border-color: var(--ps-accent);
+}
+
+.ps-skill-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ps-skill-name {
+  font-size: 13px;
+  font-family: 'Cascadia Code', Consolas, monospace;
+}
+
+.ps-skill-desc {
+  font-size: 12px;
+  color: var(--ps-text-dim);
+  line-height: 1.5;
+  min-height: 34px;
+}
+
+.ps-plugin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ps-plugin-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--ps-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ps-surface-2) 50%, var(--ps-surface));
+  font-size: 12.5px;
+}
+
+.ps-collapse-flat .ant-collapse-header {
+  font-weight: 600;
+}
+
+/* ---------- 固定头部滚动内容（扩展中心） ---------- */
+.ps-page-fixed {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-page-fixed .page-title {
+  flex-shrink: 0;
+}
+
+.ps-page-fixed .ps-ext-tabs {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-page-fixed .ps-ext-tabs .ant-tabs-nav {
+  flex-shrink: 0;
+  margin-bottom: 10px;
+}
+
+.ps-page-fixed .ps-ext-tabs .ant-tabs-content-holder {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px;
+}
+
+/* ---------- 版本监测 ---------- */
+.ps-version-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+}
+
+.ps-version-latest {
+  font-size: 12px;
+  color: var(--ps-text-dim);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ps-version-latest .mono {
+  color: var(--ps-text);
+}
+
+/* ---------- MCP 管理 ---------- */
+.ps-mcp-agent-icons {
+  display: flex;
+  gap: 10px;
+  padding: 10px 16px 2px;
+}
+
+.ps-mcp-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  transition: all 0.18s ease;
+}
+
+.ps-mcp-icon .ps-mcp-icon-badge {
+  font-size: 10.5px;
+  color: var(--ps-text-faint);
+}
+
+.ps-mcp-icon.dim .ant-avatar {
+  filter: grayscale(1) opacity(0.35);
+  box-shadow: none !important;
+}
+
+.ps-mcp-icon.lit {
+  border-color: color-mix(in srgb, var(--ps-accent) 35%, transparent);
+  background: color-mix(in srgb, var(--ps-accent) 10%, transparent);
+}
+
+.ps-mcp-icon .ps-mcp-icon-avatar {
+  box-shadow: 0 0 10px currentColor;
+}
+
+.ps-mcp-tool-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px 6px;
+}
+
+.ps-mcp-tool-row .ps-mcp-tool-name {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ps-text);
+}
+
+.ps-mcp-server-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  margin: 0 16px 8px;
+  border: 1px solid var(--ps-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--ps-surface-2) 50%, var(--ps-surface));
+  transition: border-color 0.15s ease;
+}
+
+.ps-mcp-server-item:hover {
+  border-color: var(--ps-accent);
+}
+
+.ps-mcp-server-item.disabled {
+  opacity: 0.55;
+}
+
+.ps-mcp-server-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ps-mcp-server-name {
+  font-weight: 600;
+  font-size: 12.5px;
+  font-family: 'Cascadia Code', Consolas, monospace;
+}
+
+.ps-mcp-server-target {
+  font-size: 11px;
+  color: var(--ps-text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Skills 市场 ---------- */
+.ps-webview-wrap {
+  position: relative;
+  border: 1px solid var(--ps-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.ps-webview {
+  width: 100%;
+  height: 520px;
+  display: block;
+}
+
+.ps-webview-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--ps-border);
+  background: color-mix(in srgb, var(--ps-surface-2) 55%, var(--ps-surface));
+}
+
+/* ---------- 系统提示词 ---------- */
+.ps-sysprompt-active {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--ps-accent) 40%, var(--ps-border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--ps-accent) 8%, var(--ps-surface));
+  margin-bottom: 12px;
+}
+
+.ps-sysprompt-active .ant-avatar {
+  box-shadow: 0 0 10px currentColor;
+  flex-shrink: 0;
+}
+
+.ps-sysprompt-cand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--ps-border);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  background: color-mix(in srgb, var(--ps-surface-2) 50%, var(--ps-surface));
+}
+
+.ps-sysprompt-cand.active {
+  border-color: var(--ps-accent);
+  background: color-mix(in srgb, var(--ps-accent) 10%, var(--ps-surface));
+}
+
+.ps-sysprompt-cand-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.ps-sysprompt-preview {
+  font-size: 11.5px;
+  color: var(--ps-text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ps-skills-collapse .ant-collapse-header {
+  font-weight: 600;
+}
+
+.ps-skills-collapse .ant-collapse-content-box {
+  padding-top: 4px !important;
+}
+
+/* ---------- 聚合列表（MCP / Skills） ---------- */
+.ps-agg-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  margin-bottom: 6px;
+  border: 1px solid var(--ps-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--ps-surface-2) 50%, var(--ps-surface));
+  transition: border-color 0.15s ease;
+}
+
+.ps-agg-row:hover {
+  border-color: var(--ps-accent);
+}
+
+.ps-agg-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ps-agg-name {
+  font-weight: 600;
+  font-size: 13px;
+  font-family: 'Cascadia Code', Consolas, monospace;
+  color: var(--ps-text);
+}
+
+.ps-agg-desc {
+  font-size: 11.5px;
+  color: var(--ps-text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ps-agg-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.ps-agg-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+.ps-agg-dot.on {
+  box-shadow: 0 0 10px color-mix(in srgb, var(--ps-accent) 45%, transparent);
+}
+
+.ps-agg-dot.off {
+  filter: saturate(0.15) brightness(0.9);
+}
+
+.ps-agg-dot.clickable {
+  cursor: pointer;
+}
+
+.ps-agg-dot.clickable:hover {
+  transform: scale(1.12);
+  filter: none;
+}
+
+/* ---------- 供应商卡片：左侧信息 + 右侧功能区（ccs 风格） ---------- */
+.ps-provider-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ps-provider-side {
+  flex: none;
+  width: 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  border-left: 1px dashed var(--ps-border);
+  padding-left: 12px;
+  justify-content: center;
+}
+
+.ps-provider-balance {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ps-accent);
+  padding: 6px 4px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ps-accent) 9%, transparent);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ps-provider-balance .dim {
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.ps-provider-balance .ps-balance-label {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--ps-text-dim);
+  margin-bottom: 2px;
+}
+
+.ps-provider-side .ant-btn {
+  font-size: 12px;
+}
+
+/* ---------- 统计卡底部明细 ---------- */
+.ps-stat-foot {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--ps-border);
+}
+
+.ps-stat-foot span {
+  font-size: 11.5px;
+  color: var(--ps-text-dim);
+  background: color-mix(in srgb, var(--ps-surface-2) 60%, var(--ps-surface));
+  border-radius: 6px;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+/* ---------- 知名供应商预设 ---------- */
+.ps-known-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.ps-known-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--ps-border);
+  border-radius: 10px;
+  cursor: pointer;
+  background: color-mix(in srgb, var(--ps-surface-2) 45%, var(--ps-surface));
+  transition: border-color 0.15s ease, transform 0.15s ease;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.ps-known-chip:hover {
+  border-color: var(--ps-accent);
+  transform: translateY(-1px);
+}
+
+.ps-known-avatar {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ---------- 固定头部页面：直接子卡片不压缩 ---------- */
+.ps-page-fixed > .ps-card {
+  flex-shrink: 0;
+}
+
+/* ---------- 设置页整齐布局 ---------- */
+.ps-port-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 20px;
+}
+
+.ps-settings-table .ant-table {
+  background: transparent;
+}
+
+.ps-settings-table .ant-table-cell {
+  vertical-align: middle;
+}
+
+.ps-settings-table .ant-input {
+  width: 100%;
+}
+
+.ps-import-block + .ps-import-block {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--ps-border);
+}
+
+.ps-import-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ps-text-dim);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ps-import-title::before {
+  content: '';
+  width: 3px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--ps-accent);
+  flex: none;
+}
+
+/* ---------- 各 Agent 品牌图标（ccs 风格） ---------- */
+.tool-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 30%;
+  flex: none;
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+  user-select: none;
+}
