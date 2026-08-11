@@ -1,7 +1,55 @@
+# 依赖与构建产物
 node_modules/
 dist/
 release/
+out/
+coverage/
+
+# 环境变量（防密钥泄露；保留 .env.example 模板）
+.env
+.env.*
+!.env.example
+
+# 日志
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# TypeScript 编译缓存
+*.tsbuildinfo
+
+# 临时与备份文件
+*.tmp
+*.bak
+*.swp
+*~
+*.local
+
+# IDE / 编辑器
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# 操作系统
 .DS_Store
 Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# 测试临时目录
 tests/tmp/
+
+# 缓存
+.eslintcache
+.stylelintcache
+
+# 项目级提示词与本地知识库（不入库）
+AGENTS.md
+.agent/
