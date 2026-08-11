@@ -25,6 +25,34 @@ win:
     - target: portable
       arch:
         - x64
+    - target: zip
+      arch:
+        - x64
+mac:
+  category: public.app-category.developer-tools
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+    - target: zip
+      arch:
+        - x64
+        - arm64
+linux:
+  icon: build/icon.png
+  category: Development
+  maintainer: angexqc <501979124@qq.com>
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+    - target: zip
+      arch:
+        - x64
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
