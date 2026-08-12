@@ -17,7 +17,7 @@ import Agents from './pages/Agents';
 import Stats from './pages/Stats';
 import Settings from './pages/Settings';
 import Extensions from './pages/Extensions';
-
+import ErrorBoundary from './components/ErrorBoundary';
 type PageKey = 'agents' | 'dashboard' | 'stats' | 'extensions' | 'settings';
 
 export const ConfigContext = React.createContext<{
@@ -186,11 +186,13 @@ export default function App() {
 
               <main className="ps-main">
                 <div className="ps-content">
-                  {page === 'agents' && <Agents />}
-                  {page === 'dashboard' && <Dashboard />}
-                  {page === 'stats' && <Stats />}
-                  {page === 'extensions' && <Extensions />}
-                  {page === 'settings' && <Settings />}
+                  <ErrorBoundary>
+                    {page === 'agents' && <Agents />}
+                    {page === 'dashboard' && <Dashboard />}
+                    {page === 'stats' && <Stats />}
+                    {page === 'extensions' && <Extensions />}
+                    {page === 'settings' && <Settings />}
+                  </ErrorBoundary>
                 </div>
               </main>
             </div>

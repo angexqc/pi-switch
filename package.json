@@ -1,7 +1,7 @@
 {
   "name": "@angexqc/pi-switch",
   "productName": "PiSwitch",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "多 AI 编码工具配置切换与用量统计桌面应用 (pi / Codex / Claude Code / opencode)",
   "author": "PiSwitch",
   "license": "MIT",

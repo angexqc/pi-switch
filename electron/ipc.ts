@@ -16,6 +16,7 @@ import { hasOldPiswitchConfig, importFromPiswitch, buildImport } from './switch-
 import { scanImportSources, applyImportSource } from './switch-engine/importers';
 import { getSummary, getDailyTrend, getHourlyTrend, getStatsPage, exportCsv } from './stats/aggregator';
 import { scanAllLogs } from './stats/parsers';
+import { getStatsScanInfo, touchStatsScan } from './stats/scan-state';
 import { emit } from './util/bus';
 import { launchTool } from './services/launcher';
 import { setAutoStart } from './services/autostart';
@@ -130,9 +131,11 @@ export function registerIpc(proxyManager: ProxyManager, win: () => Electron.Brow
   ipcMain.handle('piswitch:getStatsPage', (_e, q: StatsQuery) => getStatsPage(q));
   ipcMain.handle('piswitch:refreshStats', async () => {
     const r = scanAllLogs();
+    touchStatsScan();
     emit('statsChanged');
     return { sources: r };
   });
+  ipcMain.handle('piswitch:getStatsAutoUpdate', () => getStatsScanInfo());
   ipcMain.handle('piswitch:exportCsv', async (_e, q: StatsQuery) => exportCsv(q));
 
   // 代理

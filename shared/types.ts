@@ -217,6 +217,14 @@ export interface RefreshResult {
   sources: { source: StatsSource; scanned: number; inserted: number; skipped: number; error?: string }[];
 }
 
+/** 用量统计自动更新信息（主进程调度参数 + 最近一次扫描时间） */
+export interface StatsAutoUpdate {
+  /** 自动扫描间隔（毫秒） */
+  intervalMs: number;
+  /** 最近一次自动/手动扫描完成时间戳（0 = 尚未扫描） */
+  lastScanAt: number;
+}
+
 export interface ImportResult {
   importedProviders: number;
   importedModels: number;
@@ -377,6 +385,7 @@ export interface PiswitchApi {
   getHourlyTrend(): Promise<HourlyAgg[]>;
   getStatsPage(query: StatsQuery): Promise<StatsPage>;
   refreshStats(): Promise<RefreshResult>;
+  getStatsAutoUpdate(): Promise<StatsAutoUpdate>;
   exportCsv(query: StatsQuery): Promise<{ path: string }>;
   // 代理
   setProxyEnabled(tool: Tool, enabled: boolean): Promise<AppConfig>;

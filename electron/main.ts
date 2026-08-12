@@ -3,13 +3,14 @@ import path from 'node:path';
 import { loadConfig, ensureDataDir } from './switch-engine/app-config';
 import { registerIpc, syncProxy } from './ipc';
 import { openDb, insertRecords, closeDb } from './stats/db';
+import { touchStatsScan } from './stats/scan-state';
 import { backfillCosts } from './stats/aggregator';
 import { scanAllLogs } from './stats/parsers';
 import { createTray, rebuildMenu } from './services/tray';
 import { setAutoStart } from './services/autostart';
 import { ProxyManager, type ProxyBinding } from './proxy/server';
 import { on, emit } from './util/bus';
-import { APP_NAME } from './constants';
+import { APP_NAME, STATS_SCAN_INITIAL_DELAY_MS, STATS_SCAN_INTERVAL_MS } from './constants';
 import { agentProvider, agentModel } from './switch-engine/app-config';
 import { applyProfile } from './switch-engine/switch-service';
 
@@ -23,7 +24,6 @@ const TRAY_ICON_PATH = app.isPackaged ? path.join(process.resourcesPath, 'tray.p
 let mainWindow: BrowserWindow | null = null;
 let tray: Electron.Tray | null = null;
 let isQuitting = false;
-
 function createWindow(): void {
   mainWindow = new BrowserWindow({
     width: 1240,
@@ -194,16 +194,22 @@ if (!gotLock) {
 
     // 自动增量统计：启动 30 秒后首次扫描，之后每 3 分钟一次（日志解析 + 费用回填 + 通知界面）
     const statsScan = (): void => {
+      // 每个环节独立容错：任一环节失败不阻断“通知界面刷新”，保证自动更新可见
       try {
         scanAllLogs();
-        backfillCosts();
-        emit('statsChanged');
       } catch (e) {
-        console.error('[PiSwitch] 自动统计扫描失败:', (e as Error).message);
+        console.error('[PiSwitch] 自动统计日志扫描失败:', (e as Error).message);
       }
+      try {
+        backfillCosts();
+      } catch (e) {
+        console.error('[PiSwitch] 自动统计费用回填失败:', (e as Error).message);
+      }
+      touchStatsScan();
+      emit('statsChanged');
     };
-    setTimeout(statsScan, 30_000);
-    setInterval(statsScan, 3 * 60_000);
+    setTimeout(statsScan, STATS_SCAN_INITIAL_DELAY_MS);
+    setInterval(statsScan, STATS_SCAN_INTERVAL_MS);
 
     createWindow();
     initTray();

@@ -35,6 +35,7 @@ const api: PiswitchApi = {
   getHourlyTrend: () => ipcRenderer.invoke('piswitch:getHourlyTrend'),
   getStatsPage: (q: StatsQuery) => ipcRenderer.invoke('piswitch:getStatsPage', q),
   refreshStats: () => ipcRenderer.invoke('piswitch:refreshStats'),
+  getStatsAutoUpdate: () => ipcRenderer.invoke('piswitch:getStatsAutoUpdate'),
   exportCsv: (q: StatsQuery) => ipcRenderer.invoke('piswitch:exportCsv', q),
   // 代理
   setProxyEnabled: (tool: Tool, enabled: boolean) => ipcRenderer.invoke('piswitch:setProxyEnabled', tool, enabled),

@@ -142,6 +142,7 @@ export function scanCodexLogs(): InsertRecord[] {
   const out: InsertRecord[] = [];
   if (!fs.existsSync(dbPath)) return out;
   let lastRow = getScanState('codex:logs').lastRow ?? 0;
+  let maxId = lastRow;
   let db: Database.Database | null = null;
   try {
     db = new Database(dbPath, { readonly: true });
@@ -151,7 +152,10 @@ export function scanCodexLogs(): InsertRecord[] {
          WHERE id > ? AND feedback_log_body LIKE '%token_usage%' ORDER BY id ASC LIMIT 5000`
       )
       .all(lastRow) as { id: number; ts: number; feedback_log_body: string | null }[];
-    let maxId = lastRow;
+    // 扫描指针始终推进到最后一条已扫描行（无论是否含 usage）：
+    // 若只推进匹配行，中间夹一段无 usage 的日志会导致指针停滞，
+    // 其后的新用量记录将永远不会被增量扫描发现（表现为“必须手动扫描才更新”）。
+    if (rows.length) maxId = rows[rows.length - 1].id;
     for (const r of rows) {
       const body = r.feedback_log_body || '';
       const m = body.match(USAGE_RE);
@@ -177,7 +181,6 @@ export function scanCodexLogs(): InsertRecord[] {
         status: 'ok',
         dedupKey: `codex:${r.id}`,
       });
-      if (r.id > maxId) maxId = r.id;
     }
     if (maxId > lastRow) setScanState('codex:logs', { lastRow: maxId });
   } catch (e) {

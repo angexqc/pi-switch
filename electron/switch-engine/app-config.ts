@@ -32,9 +32,9 @@ const agentSchema = z.object({
   enabled: z.boolean().default(false),
   providerId: z.string().default(''),
   modelId: z.string().default(''),
-  reasoningEffort: z.string().optional(),
-  proxyEnabled: z.boolean().optional(),
-  envOverrides: z.record(z.string(), z.string()).optional(),
+  reasoningEffort: z.string().nullish(),
+  proxyEnabled: z.boolean().nullish(),
+  envOverrides: z.record(z.string(), z.string()).nullish(),
   providers: z.array(providerSchema).default([]),
 });
 
@@ -80,9 +80,9 @@ const legacyBindingSchema = z.object({
   enabled: z.boolean().default(true),
   providerId: z.string(),
   modelId: z.string(),
-  reasoningEffort: z.string().optional(),
-  proxyEnabled: z.boolean().optional(),
-  envOverrides: z.record(z.string(), z.string()).optional(),
+  reasoningEffort: z.string().nullish(),
+  proxyEnabled: z.boolean().nullish(),
+  envOverrides: z.record(z.string(), z.string()).nullish(),
 });
 
 const legacyConfigSchema = z.object({

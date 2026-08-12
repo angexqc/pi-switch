@@ -13,7 +13,13 @@ export default function EChart({ option, height = 320, onEvents }: Props) {
 
   useEffect(() => {
     if (!ref.current) return;
-    const chart = echarts.init(ref.current);
+    let chart: echarts.ECharts | null = null;
+    try {
+      chart = echarts.init(ref.current);
+    } catch (e) {
+      console.error('[PiSwitch] ECharts init 失败:', (e as Error).message);
+      return;
+    }
     chartRef.current = chart;
     if (onEvents) {
       for (const [name, fn] of Object.entries(onEvents)) {
@@ -30,7 +36,12 @@ export default function EChart({ option, height = 320, onEvents }: Props) {
   }, []);
 
   useEffect(() => {
-    chartRef.current?.setOption(option, true);
+    // setOption 对空/异常数据可能抛错，避免渲染异常拖垮整棵组件树（白屏）
+    try {
+      chartRef.current?.setOption(option, true);
+    } catch (e) {
+      console.error('[PiSwitch] ECharts setOption 失败:', (e as Error).message);
+    }
   }, [option]);
 
   return <div ref={ref} style={{ width: '100%', height }} />;

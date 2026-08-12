@@ -44,6 +44,10 @@ export const CONFIG_FILE_NAME = 'config.json';
 export const STATS_DB_NAME = 'stats.db';
 export const BACKUPS_DIR_NAME = 'backups';
 
+/** 用量统计自动扫描：启动后首次延迟 + 间隔（毫秒），供主进程调度与界面展示 */
+export const STATS_SCAN_INITIAL_DELAY_MS = 30_000;
+export const STATS_SCAN_INTERVAL_MS = 3 * 60_000;
+
 export const OLD_PISWITCH_DIR_NAME = '.piswitch';
 
 export const APP_ID = 'com.piswitch.app';

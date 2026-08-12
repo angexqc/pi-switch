@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Card, DatePicker, Segmented, Select, Space, Table, Tag, message } from 'antd';
-import { DownloadOutlined, ReloadOutlined } from '@ant-design/icons';
+import { DownloadOutlined, ReloadOutlined, SyncOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import type { DailyAgg, HourlyAgg, StatsQuery, StatsRange, StatsSummary, UsageRecord } from '../../shared/types';
+import type { DailyAgg, HourlyAgg, StatsAutoUpdate, StatsQuery, StatsRange, StatsSummary, UsageRecord } from '../../shared/types';
 import StatCard from '../components/StatCard';
 import EChart from '../components/EChart';
 import { SOURCE_LABELS, STATUS_LABELS, TOOL_COLORS, TOOL_LABELS, fmtTime, fmtTokens, fmtUsd } from '../constants';
@@ -17,6 +17,30 @@ const RANGES: { key: StatsRange; label: string; days: number }[] = [
   { key: 'all', label: '全部', days: 30 },
 ];
 
+/** HH:mm:ss（用于“上次/下次自动更新”展示） */
+const fmtClock = (ts: number): string => {
+  const d = new Date(ts);
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+};
+
+/** 自动更新提示（独立组件每秒刷新倒计时，避免整页每秒重渲染） */
+function AutoUpdateHint({ autoInfo }: { autoInfo: StatsAutoUpdate | null }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!autoInfo || autoInfo.lastScanAt <= 0) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [autoInfo]);
+  if (!autoInfo) return <span>自动更新中…</span>;
+  const intervalMin = Math.max(1, Math.round(autoInfo.intervalMs / 60_000));
+  if (autoInfo.lastScanAt <= 0) return <span>每 {intervalMin} 分钟自动更新 · 尚未扫描</span>;
+  const last = fmtClock(autoInfo.lastScanAt);
+  const nextAt = autoInfo.lastScanAt + autoInfo.intervalMs;
+  const diffSec = Math.max(0, Math.floor((nextAt - now) / 1000));
+  const countdown = diffSec >= 60 ? `${Math.floor(diffSec / 60)}分${diffSec % 60 ? `${diffSec % 60}秒` : ''}` : `${diffSec}秒`;
+  return <span>每 {intervalMin} 分钟自动更新 · 上次 {last} · 下次 {fmtClock(nextAt)}（{countdown}后）</span>;
+}
 // 深色主题下的图表配色（中转站风格：消费蓝 / 请求绿 / 金额红）
 const AXIS = '#9aa0a6';
 const SPLIT = 'rgba(255,255,255,0.08)';
@@ -38,7 +62,7 @@ export default function Stats() {
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState<StatsQuery>({ tool: 'all', source: 'all', limit: 200, offset: 0 });
   const [refreshing, setRefreshing] = useState(false);
-
+  const [autoInfo, setAutoInfo] = useState<StatsAutoUpdate | null>(null);
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
@@ -60,11 +84,20 @@ export default function Stats() {
     loadAll();
   }, [loadAll]);
 
-  // 自动更新：主进程每 3 分钟增量扫描日志并推送事件，此处自动刷新看板
+  // 自动更新：主进程定期增量扫描日志并推送事件，此处自动刷新看板
+  const refreshAutoInfo = useCallback(() => {
+    window.piswitch.getStatsAutoUpdate().then(setAutoInfo).catch(() => undefined);
+  }, []);
   useEffect(() => {
-    const off = window.piswitch.onStatsChanged(() => loadAll());
+    refreshAutoInfo();
+  }, [refreshAutoInfo]);
+  useEffect(() => {
+    const off = window.piswitch.onStatsChanged(() => {
+      refreshAutoInfo();
+      loadAll();
+    });
     return off;
-  }, [loadAll]);
+  }, [loadAll, refreshAutoInfo]);
 
   const refresh = async () => {
     setRefreshing(true);
@@ -298,7 +331,13 @@ export default function Stats() {
   return (
     <div className="page">
       <div className="page-title">
-        <span>用量统计</span>
+        <div>
+          <div className="title">用量统计</div>
+          <div className="title-desc">
+            <SyncOutlined style={{ marginRight: 4 }} />
+            <AutoUpdateHint autoInfo={autoInfo} />
+          </div>
+        </div>
         <Space>
           <Segmented
             value={range}
