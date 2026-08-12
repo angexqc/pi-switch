@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  packages: write
 
 jobs:
   release:
@@ -71,6 +72,15 @@ jobs:
         env:
           # macOS 未配置签名证书时跳过签名尝试
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - name: Publish to GitHub Packages
+        if: matrix.name == 'linux'
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> .npmrc
+          pnpm publish --no-git-checks
+          rm -f .npmrc
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload assets to GitHub Release
         uses: softprops/action-gh-release@v2
