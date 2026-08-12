@@ -24,7 +24,7 @@ jobs:
               release/*.zip
           - name: mac
             os: macos-latest
-            args: --mac dmg zip
+            args: --mac dmg zip --x64 --arm64
             assets: |
               release/*.dmg
               release/*.zip
