@@ -105,12 +105,18 @@ export default function Stats() {
     return `近${RANGES.find((r) => r.key === range)?.label ?? ''}`;
   }, [range]);
 
-  /** 趋势图 X 轴标签：今日按小时（08:00），其余按日期（MM-DD） */
+  /** 趋势图 X 轴标签：今日按小时（08:00），其余按日期（MM-DD）
+   *  切换 range 的瞬间 trend 仍是旧类型数据（loadAll 未返回），必须做类型守卫，
+   *  否则 d.day.slice() 对 undefined 抛错 → React 渲染崩溃白屏 */
   const trendLabels = useMemo(() => {
-    if (range === 'today') {
+    const first = trend[0] as (DailyAgg & HourlyAgg) | undefined;
+    if (first && range === 'today' && 'hour' in first) {
       return (trend as HourlyAgg[]).map((d) => `${String(d.hour).padStart(2, '0')}:00`);
     }
-    return (trend as DailyAgg[]).map((d) => d.day.slice(5));
+    if (first && range !== 'today' && 'day' in first) {
+      return (trend as DailyAgg[]).map((d) => d.day.slice(5));
+    }
+    return [];
   }, [trend, range]);
 
   const trendOption = useMemo(() => {
