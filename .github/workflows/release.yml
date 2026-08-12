@@ -67,7 +67,7 @@ jobs:
         run: pnpm build
 
       - name: Package ${{ matrix.name }}
-        run: npx electron-builder ${{ matrix.args }}
+        run: npx electron-builder ${{ matrix.args }} --publish never
         env:
           # macOS 未配置签名证书时跳过签名尝试
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
