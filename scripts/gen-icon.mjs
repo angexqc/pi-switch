@@ -140,7 +140,25 @@ function encodeIco(png) {
 }
 
 mkdirSync(OUT, { recursive: true });
-const png = encodePng(SIZE, SIZE, Buffer.from(px));
-writeFileSync(join(OUT, 'icon.png'), png);
-writeFileSync(join(OUT, 'icon.ico'), encodeIco(png));
-console.log('icon generated:', join(OUT, 'icon.png'), png.length, 'bytes');
+// 最近邻 2x 放大到 512（mac 打包要求图标 >=512x512）；ico 保持 256 标准尺寸
+function scale2x(src, srcSize) {
+  const dst = new Uint8Array(srcSize * 2 * srcSize * 2 * 4);
+  for (let y = 0; y < srcSize * 2; y++) {
+    const sy = Math.floor(y / 2);
+    for (let x = 0; x < srcSize * 2; x++) {
+      const sx = Math.floor(x / 2);
+      const si = (sy * srcSize + sx) * 4;
+      const di = (y * srcSize * 2 + x) * 4;
+      dst[di] = px[si];
+      dst[di + 1] = px[si + 1];
+      dst[di + 2] = px[si + 2];
+      dst[di + 3] = px[si + 3];
+    }
+  }
+  return dst;
+}
+const png512 = encodePng(SIZE * 2, SIZE * 2, Buffer.from(scale2x(px, SIZE)));
+const png256 = encodePng(SIZE, SIZE, Buffer.from(px));
+writeFileSync(join(OUT, 'icon.png'), png512);
+writeFileSync(join(OUT, 'icon.ico'), encodeIco(png256));
+console.log('icon generated:', join(OUT, 'icon.png'), png512.length, 'bytes (512x512) + icon.ico (256)');
