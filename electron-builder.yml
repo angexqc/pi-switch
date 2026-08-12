@@ -40,6 +40,8 @@ mac:
         - x64
         - arm64
 linux:
+  executableName: piswitch
+  artifactName: piswitch-${version}-${arch}.${ext}
   icon: build/icon.png
   category: Development
   maintainer: angexqc <501979124@qq.com>
