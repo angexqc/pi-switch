@@ -1,6 +1,7 @@
 import { exec, spawn } from 'node:child_process';
 import https from 'node:https';
-import type { Tool, ToolVersion } from '../../shared/types';
+import type { PiPluginInfo, Tool, ToolVersion } from '../../shared/types';
+import { getPiPlugins } from './extensions';
 
 /** 各 CLI 全局 npm 包名（用于 npm update -g 兜底升级 + 最新版本查询） */
 export const NPM_PACKAGES: Record<Tool, string> = {
@@ -168,6 +169,80 @@ export async function upgradeTool(tool: Tool): Promise<{ ok: boolean; output?: s
     if (fb.code === 0) return { ok: true, output: fb.out || 'npm 更新完成' };
     return { ok: false, error: `${r.out}\n${fb.out}`.slice(0, 800) };
   }
+  return { ok: false, error: r.out.slice(0, 800) };
+}
+
+/** 去掉包名上的 npm: 协议前缀（settings.json 可能写成 npm:@scope/pkg） */
+function pkgName(pkg: string): string {
+  return pkg.replace(/^npm:/, '').trim();
+}
+
+/** 从混有 stderr 警告的输出里提取首个 JSON 对象 */
+function extractJson<T>(s: string): T | undefined {
+  try {
+    return JSON.parse(s) as T;
+  } catch {
+    /* fallthrough */
+  }
+  const start = s.indexOf('{');
+  const end = s.lastIndexOf('}');
+  if (start >= 0 && end > start) {
+    try {
+      return JSON.parse(s.slice(start, end + 1)) as T;
+    } catch {
+      /* fallthrough */
+    }
+  }
+  return undefined;
+}
+
+/** 读取全局 npm 已安装包名 → 版本（一次 npm ls，15s 超时） */
+async function getGlobalInstalledVersions(): Promise<Record<string, string>> {
+  const r = await runCmd('npm ls -g --depth=0 --json', 15_000);
+  const j = extractJson<{ dependencies?: Record<string, { version?: string }> }>(r.out);
+  const out: Record<string, string> = {};
+  for (const [name, dep] of Object.entries(j?.dependencies ?? {})) {
+    if (dep?.version) out[name] = dep.version;
+  }
+  return out;
+}
+
+/** Pi 插件版本检测：已安装版本 + registry 最新版（后台异步，不阻塞 UI） */
+export async function getPiPluginVersions(): Promise<PiPluginInfo[]> {
+  const pkgs = getPiPlugins();
+  if (pkgs.length === 0) return [];
+  const installed = await getGlobalInstalledVersions();
+  const out: PiPluginInfo[] = [];
+  for (const pkg of pkgs) {
+    const name = pkgName(pkg);
+    const version = installed[name];
+    const latest = await fetchLatest(name);
+    out.push({
+      name: pkg,
+      version,
+      latest,
+      updateAvailable: version && latest ? compareVersions(version, latest) < 0 : undefined,
+    });
+  }
+  return out;
+}
+
+/** 升级单个 Pi 插件（npm install -g pkg@latest，600s 超时） */
+export async function upgradePiPlugin(pkg: string): Promise<{ ok: boolean; output?: string; error?: string }> {
+  const name = pkgName(pkg);
+  if (!name) return { ok: false, error: '无效的包名' };
+  const r = await runCmd(`npm install -g ${name}@latest`, 600_000);
+  if (r.code === 0) return { ok: true, output: r.out || '升级完成' };
+  return { ok: false, error: r.out.slice(0, 800) };
+}
+
+/** 一次性升级全部 Pi 插件（合并为单条 npm install，避免逐个执行卡死 UI） */
+export async function upgradeAllPiPlugins(): Promise<{ ok: boolean; output?: string; error?: string }> {
+  const pkgs = getPiPlugins();
+  if (pkgs.length === 0) return { ok: false, error: '没有可升级的插件' };
+  const targets = pkgs.map(pkgName).filter(Boolean).map((n) => `${n}@latest`);
+  const r = await runCmd(`npm install -g ${targets.join(' ')}`, 600_000);
+  if (r.code === 0) return { ok: true, output: r.out || '全部升级完成' };
   return { ok: false, error: r.out.slice(0, 800) };
 }
 

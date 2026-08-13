@@ -48,7 +48,6 @@ export default function Agents() {
       <div className="page-title">
         <div>
           <div className="title">Agent 配置</div>
-          <div className="title-desc">每个 Agent 独立配置供应商、绑定与精确统计，互不影响</div>
         </div>
         <Space wrap={false}>
           <Input

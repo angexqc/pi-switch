@@ -236,7 +236,7 @@ function scanSkillDir(location: SkillLocation, locationLabel: string, dir: strin
 
 export function getSkills(): SkillItem[] {
   const dirs: { loc: SkillLocation; label: string; dir: string }[] = [
-    { loc: 'user', label: '用户级（~/.agents/skills）', dir: path.join(homeDir(), '.agents', 'skills') },
+    { loc: 'pi', label: '用户级（~/.agents/skills）', dir: path.join(homeDir(), '.agents', 'skills') },
     { loc: 'claude', label: 'Claude Code（~/.claude/skills）', dir: path.join(claudeDir(), 'skills') },
     { loc: 'codex', label: 'Codex（~/.codex/skills）', dir: path.join(codexDir(), 'skills') },
     { loc: 'opencode', label: 'opencode（~/.config/opencode/skills）', dir: path.join(homeDir(), '.config', 'opencode', 'skills') },
@@ -247,7 +247,7 @@ export function getSkills(): SkillItem[] {
 export function deleteSkill(location: SkillLocation, name: string): Op {
   try {
     let dir: string;
-    if (location === 'user') dir = path.join(homeDir(), '.agents', 'skills', name);
+    if (location === 'pi') dir = path.join(homeDir(), '.agents', 'skills', name);
     else if (location === 'claude') dir = path.join(claudeDir(), 'skills', name);
     else if (location === 'codex') dir = path.join(codexDir(), 'skills', name);
     else dir = path.join(homeDir(), '.config', 'opencode', 'skills', name);
@@ -562,7 +562,7 @@ export function getSkillsAggregated(): SkillAggItem[] {
   const all = getSkills();
   const map = new Map<string, SkillAggItem>();
   for (const s of all) {
-    const tool: Tool = s.location === 'user' ? 'pi' : s.location;
+    const tool: Tool = s.location;
     let item = map.get(s.name);
     if (!item) {
       item = { name: s.name, description: s.description, path: s.path, agents: {} };
@@ -597,7 +597,7 @@ export async function deleteSkillEverywhere(name: string): Promise<Op> {
   if (!agg) return { ok: false, error: 'Skill 不存在' };
   for (const [tool, installed] of Object.entries(agg.agents) as [Tool, boolean][]) {
     if (!installed) continue;
-    const loc: SkillLocation = tool === 'pi' ? 'user' : (tool as SkillLocation);
+    const loc: SkillLocation = tool;
     const r = deleteSkill(loc, name);
     if (!r.ok) return { ok: false, error: `${TOOL_LABELS[tool]} 删除失败：${r.error}` };
   }

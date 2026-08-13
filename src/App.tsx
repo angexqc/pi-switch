@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ConfigProvider, theme as antdTheme, App as AntApp, Modal, Radio, Checkbox, message } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import {
@@ -27,12 +27,13 @@ export const ConfigContext = React.createContext<{
 
 export default function App() {
   const [config, setConfigState] = useState<AppConfig | null>(null);
-  const [page, setPage] = useState<PageKey>('agents');
+  const [page, setPage] = useState<PageKey>('dashboard');
   const [closeOpen, setCloseOpen] = useState(false);
   const [closeChoice, setCloseChoice] = useState<CloseAction>('minimize');
   const [closeRemember, setCloseRemember] = useState(false);
   const [closeBusy, setCloseBusy] = useState(false);
-
+  const navRef = useRef<HTMLElement | null>(null);
+  const indicatorRef = useRef<HTMLSpanElement | null>(null);
   useEffect(() => {
     window.piswitch.getConfig().then(setConfigState);
     const off = window.piswitch.onConfigChanged((c) => setConfigState(c));
@@ -73,6 +74,33 @@ export default function App() {
     document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
   }, [isDark]);
 
+  // 数字键 1-4 快速切换页面（输入框 / 编辑器中聚焦时不触发）
+  useEffect(() => {
+    const map: Record<string, PageKey> = { '1': 'dashboard', '2': 'agents', '3': 'stats', '4': 'extensions' };
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      const k = map[e.key];
+      if (k) setPage(k);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  // 侧栏滑动高亮指示器：测量 active 项并定位（须在 if(!config) 之前，保证 hook 数量稳定）
+  useLayoutEffect(() => {
+    const nav = navRef.current, indicator = indicatorRef.current;
+    if (!nav || !indicator) return;
+    const active = nav.querySelector('.ps-nav-item.active') as HTMLElement | null;
+    if (!active) {
+      indicator.style.opacity = '0';
+      return;
+    }
+    indicator.style.opacity = '1';
+    indicator.style.transform = `translateY(${active.offsetTop}px)`;
+    indicator.style.height = `${active.offsetHeight}px`;
+  }, [page, config]);
+
   const confirmClose = async () => {
     setCloseBusy(true);
     try {
@@ -101,8 +129,8 @@ export default function App() {
   }
 
   const navItems: { key: PageKey; icon: React.ReactNode; label: string }[] = [
-    { key: 'agents', icon: <SlidersOutlined />, label: 'Agent 配置' },
     { key: 'dashboard', icon: <DashboardOutlined />, label: '概览' },
+    { key: 'agents', icon: <SlidersOutlined />, label: 'Agent 配置' },
     { key: 'stats', icon: <BarChartOutlined />, label: '用量统计' },
     { key: 'extensions', icon: <AppstoreOutlined />, label: '扩展中心' },
   ];
@@ -115,26 +143,29 @@ export default function App() {
       theme={{
         algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
         token: {
-          colorPrimary: isDark ? '#35d0ba' : '#0f9d8a',
-          colorLink: isDark ? '#35d0ba' : '#0f9d8a',
-          borderRadius: 8,
-          colorBgBase: isDark ? '#0a0e13' : '#f2f5f7',
-          colorBgContainer: isDark ? '#10161d' : '#ffffff',
-          colorBgElevated: isDark ? '#141c25' : '#ffffff',
-          colorBorder: isDark ? '#1e2a36' : '#dbe4ea',
-          colorBorderSecondary: isDark ? '#1a2430' : '#e6edf2',
-          colorText: isDark ? '#dbe6ee' : '#18222c',
-          colorTextSecondary: isDark ? '#8394a3' : '#5b6b79',
-          colorTextTertiary: isDark ? '#5c6b79' : '#8b99a5',
-          colorSuccess: '#5ee08a',
-          colorWarning: '#f5b942',
-          colorError: '#ff6b6b',
-          fontFamily: "'Segoe UI Variable Text', 'Segoe UI', 'Microsoft YaHei UI', 'Microsoft YaHei', system-ui, sans-serif",
+          colorPrimary: '#0f6feb',
+          colorLink: '#2684ff',
+          borderRadius: 6,
+          controlHeight: 34,
+          colorBgBase: isDark ? '#19191e' : '#f4f5f7',
+          colorBgContainer: isDark ? '#202026' : '#ffffff',
+          colorBgElevated: isDark ? '#27272e' : '#ffffff',
+          colorBorder: isDark ? '#383840' : '#d8dce3',
+          colorBorderSecondary: isDark ? '#303037' : '#e6e8ec',
+          colorText: isDark ? '#f2f2f4' : '#202127',
+          colorTextSecondary: isDark ? '#a1a1aa' : '#626772',
+          colorTextTertiary: isDark ? '#71717b' : '#8b919c',
+          colorSuccess: '#23b26d',
+          colorWarning: '#d99328',
+          colorError: '#e45454',
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', 'Segoe UI', 'Microsoft YaHei UI', 'Microsoft YaHei', system-ui, sans-serif",
         },
         components: {
-          Tabs: { inkBarColor: isDark ? '#35d0ba' : '#0f9d8a', itemSelectedColor: isDark ? '#dbe6ee' : '#18222c' },
-          Table: { headerBg: isDark ? '#141c25' : '#f7fafb' },
-          Modal: { contentBg: isDark ? '#10161d' : '#ffffff' },
+          Button: { primaryShadow: 'none', defaultShadow: 'none' },
+          Tabs: { inkBarColor: '#0f6feb', itemSelectedColor: isDark ? '#f2f2f4' : '#202127' },
+          Table: { headerBg: isDark ? '#26262c' : '#f1f2f4', rowHoverBg: isDark ? '#27272e' : '#f7f8fa' },
+          Modal: { contentBg: isDark ? '#202026' : '#ffffff' },
+          Segmented: { itemSelectedBg: '#0f6feb', itemSelectedColor: '#ffffff' },
         },
       }}
     >
@@ -144,13 +175,20 @@ export default function App() {
             <div className="ps-shell-inner">
               <aside className="ps-sider">
                 <div className="ps-brand">
-                  <div className="ps-brand-mark">P</div>
+                  <div className="ps-brand-mark">
+                    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                      <path d="M12 2v20M3.34 7l17.32 10M20.66 7L3.34 17" />
+                      <path d="M12 5.7l-1.9 1.9M12 5.7l1.9 1.9M12 18.3l-1.9-1.9M12 18.3l1.9-1.9" />
+                      <path d="M6.9 8.55L5.1 9.6M6.9 8.55l2 1.15M17.1 8.55l1.8 1.05M17.1 8.55l-2 1.15M17.1 15.45l1.8-1.05M17.1 15.45l-2-1.15M6.9 15.45L5.1 14.4M6.9 15.45l2-1.15" />
+                    </svg>
+                  </div>
                   <div>
                     <div className="ps-brand-name">PiSwitch</div>
                     <div className="ps-brand-sub">Agent Console</div>
                   </div>
                 </div>
-                <nav className="ps-nav">
+                <nav className="ps-nav" ref={navRef}>
+                  <span className="ps-nav-indicator" ref={indicatorRef} aria-hidden="true" />
                   {navItems.map((n) => (
                     <button
                       key={n.key}

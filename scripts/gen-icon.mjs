@@ -37,55 +37,75 @@ function inTriangle(x, y, ax, ay, bx, by, cx, cy) {
   return !(neg && pos);
 }
 
-// 背景：深蓝→紫色渐变圆角方块
+// 背景：品牌蓝 → 冰蓝渐变圆角方块（呼应蓝色毛玻璃主题 + 雪花）
 const rad = 56;
 for (let y = 0; y < SIZE; y++) {
   for (let x = 0; x < SIZE; x++) {
     if (!inRoundRect(x, y, 6, 6, SIZE - 7, SIZE - 7, rad)) continue;
     const t = (x + y) / (2 * SIZE);
-    const r = Math.round(24 + t * 40);
-    const g = Math.round(38 + t * 30);
-    const b = Math.round(110 + t * 120);
+    const r = Math.round(15 + t * 52);
+    const g = Math.round(111 + t * 63);
+    const b = Math.round(235 + t * 17);
     setPx(x, y, r, g, b, 255);
   }
 }
 
-// 白/青色 ⇄ 双箭头（切换符号）
+// 白色雪花：6 条主臂 + 侧枝 + 中心圆
+const cx = SIZE / 2;
 const cy = SIZE / 2;
-const armY = 86; // 上箭头
-const armY2 = 170; // 下箭头
-const white = [240, 245, 255];
-const accent = [90, 200, 250];
+const R = 100;
+const white = [255, 255, 255];
 
-function drawArrow(yBase, dir) {
-  // shaft
-  for (let y = yBase - 14; y <= yBase + 14; y++) {
-    for (let x = 44; x <= 168; x++) {
-      const d = Math.abs(x - 106);
-      const half = 26 - (Math.abs(y - yBase) * 26) / 18;
-      if (d <= half) {
-        const [r, g, b] = white;
-        setPx(x, y, r, g, b);
-      }
-    }
+function drawSegment(x1, y1, x2, y2, w, rgb) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len = Math.hypot(dx, dy);
+  if (len < 0.001) {
+    setPx(Math.round(x1), Math.round(y1), rgb[0], rgb[1], rgb[2], 255);
+    return;
   }
-  // head triangles
-  for (let y = yBase - 20; y <= yBase + 20; y++) {
-    for (let x = 150; x <= 212; x++) {
-      if (dir > 0 && inTriangle(x, y, 150, yBase - 20, 150, yBase + 20, 214, yBase)) {
-        const [r, g, b] = accent;
-        setPx(x, y, r, g, b);
-      }
-      if (dir < 0 && inTriangle(x, y, 106, yBase - 20, 106, yBase + 20, 42, yBase)) {
-        const [r, g, b] = accent;
-        setPx(x, y, r, g, b);
-      }
+  const hw = w / 2;
+  const minX = Math.floor(Math.min(x1, x2) - hw - 1);
+  const maxX = Math.ceil(Math.max(x1, x2) + hw + 1);
+  const minY = Math.floor(Math.min(y1, y2) - hw - 1);
+  const maxY = Math.ceil(Math.max(y1, y2) + hw + 1);
+  for (let y = minY; y <= maxY; y++) {
+    for (let x = minX; x <= maxX; x++) {
+      const tt = ((x - x1) * dx + (y - y1) * dy) / (len * len);
+      const tc = tt < 0 ? 0 : tt > 1 ? 1 : tt;
+      const pxp = x1 + dx * tc;
+      const pyp = y1 + dy * tc;
+      const d = Math.hypot(x - pxp, y - pyp);
+      if (d <= hw) setPx(x, y, rgb[0], rgb[1], rgb[2], 255);
     }
   }
 }
 
-drawArrow(armY, 1);
-drawArrow(armY2, -1);
+for (let i = 0; i < 6; i++) {
+  const a = -Math.PI / 2 + i * (Math.PI / 3);
+  const ux = Math.cos(a);
+  const uy = Math.sin(a);
+  const sx = cx + ux * 16;
+  const sy = cy + uy * 16;
+  const ex = cx + ux * R;
+  const ey = cy + uy * R;
+  drawSegment(sx, sy, ex, ey, 7, white);
+  for (const f of [0.52, 0.76]) {
+    const bx = cx + ux * R * f;
+    const by = cy + uy * R * f;
+    const blen = R * 0.3;
+    const ba = 0.85;
+    drawSegment(bx, by, bx + Math.cos(a + ba) * blen, by + Math.sin(a + ba) * blen, 4.5, white);
+    drawSegment(bx, by, bx + Math.cos(a - ba) * blen, by + Math.sin(a - ba) * blen, 4.5, white);
+  }
+}
+
+// 中心圆
+for (let y = -7; y <= 7; y++) {
+  for (let x = -7; x <= 7; x++) {
+    if (x * x + y * y <= 7 * 7) setPx(cx + x, cy + y, 255, 255, 255, 255);
+  }
+}
 
 // ---------- PNG 编码 ----------
 function crc32(buf) {

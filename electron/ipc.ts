@@ -53,7 +53,7 @@ import {
   installSkillToAgent,
   deleteSkillEverywhere,
 } from './services/extensions';
-import { getToolVersions, upgradeTool, runSkillsCommand } from './services/updater';
+import { getToolVersions, upgradeTool, runSkillsCommand, getPiPluginVersions, upgradePiPlugin, upgradeAllPiPlugins } from './services/updater';
 import type { PromptScope, SkillLocation } from '../shared/types';
 import type { ProxyManager } from './proxy/server';
 
@@ -228,6 +228,9 @@ export function registerIpc(proxyManager: ProxyManager, win: () => Electron.Brow
   ipcMain.handle('piswitch:getPiPlugins', () => getPiPlugins());
   ipcMain.handle('piswitch:addPiPlugin', (_e, pkg: string) => addPiPlugin(pkg));
   ipcMain.handle('piswitch:removePiPlugin', (_e, pkg: string) => removePiPlugin(pkg));
+  ipcMain.handle('piswitch:getPiPluginVersions', () => getPiPluginVersions());
+  ipcMain.handle('piswitch:upgradePiPlugin', (_e, pkg: string) => upgradePiPlugin(pkg));
+  ipcMain.handle('piswitch:upgradeAllPiPlugins', () => upgradeAllPiPlugins());
   ipcMain.handle('piswitch:getPromptFiles', () => getPromptFiles());
   ipcMain.handle('piswitch:readPromptFile', (_e, p: string) => readPromptFile(p));
   ipcMain.handle('piswitch:savePromptFile', (_e, p: string, content: string) => savePromptFile(p, content));

@@ -29,55 +29,72 @@ function inRoundRect(x, y, x0, y0, x1, y1, rad) {
   return dx * dx + dy * dy <= rad * rad;
 }
 
-// 背景：accent 渐变圆角方块（#0f766e → #35d0ba 青绿色）
+// 背景：品牌蓝 → 冰蓝渐变圆角方块（64px 托盘）
 const rad = 15;
 for (let y = 0; y < SIZE; y++) {
   for (let x = 0; x < SIZE; x++) {
     if (!inRoundRect(x, y, 3, 3, SIZE - 4, SIZE - 4, rad)) continue;
     const t = (x + y) / (2 * SIZE);
-    const r = Math.round(15 + t * 38);
-    const g = Math.round(118 + t * 90);
-    const b = Math.round(110 + t * 76);
+    const r = Math.round(15 + t * 52);
+    const g = Math.round(111 + t * 63);
+    const b = Math.round(235 + t * 17);
     setPx(x, y, r, g, b, 255);
   }
 }
 
-// 白色双箭头（左→右交换，两条带圆角的折线箭头）+ 底部小圆点
-function inArrow(x, y) {
-  // 上箭头：从 (14,22) → (50,22) 向右，箭头尖在 (56,32)，折回 (50,42)
-  // 简化：两条平行线 + 箭头
-  const top = 18; // 上箭头基线 y
-  const bot = 44; // 下箭头基线 y
-  // 上箭头横线（y=top..top+4，x=16..46）
-  if (y >= top && y <= top + 4 && x >= 16 && x <= 46) return true;
-  // 上箭头尖（三角形，顶点 (54, 26)，底 (46,20)-(46,32)）
-  {
-    const ax = 54, ay = 26, bx = 44, by = 19, cx2 = 44, cy2 = 33;
-    const s1 = (ax - x) * (by - ay) - (bx - ax) * (ay - y);
-    const s2 = (bx - x) * (cy2 - by) - (cx2 - bx) * (by - y);
-    const s3 = (cx2 - x) * (ay - cy2) - (ax - cx2) * (cy2 - y);
-    const neg = s1 < 0 || s2 < 0 || s3 < 0;
-    const pos = s1 > 0 || s2 > 0 || s3 > 0;
-    if (!(neg && pos)) return true;
+// 白色雪花（小尺寸简化）
+const cx = SIZE / 2;
+const cy = SIZE / 2;
+const R = 27;
+const white = [255, 255, 255];
+
+function drawSegment(x1, y1, x2, y2, w, rgb) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len = Math.hypot(dx, dy);
+  if (len < 0.001) {
+    setPx(Math.round(x1), Math.round(y1), rgb[0], rgb[1], rgb[2], 255);
+    return;
   }
-  // 下箭头横线（y=bot..bot+4，x=18..48）反向
-  if (y >= bot && y <= bot + 4 && x >= 18 && x <= 48) return true;
-  // 下箭头尖（三角形，顶点 (10, 38)，底 (20,31)-(20,45)）
-  {
-    const ax = 10, ay = 38, bx = 20, by = 31, cx2 = 20, cy2 = 45;
-    const s1 = (ax - x) * (by - ay) - (bx - ax) * (ay - y);
-    const s2 = (bx - x) * (cy2 - by) - (cx2 - bx) * (by - y);
-    const s3 = (cx2 - x) * (ay - cy2) - (ax - cx2) * (cy2 - y);
-    const neg = s1 < 0 || s2 < 0 || s3 < 0;
-    const pos = s1 > 0 || s2 > 0 || s3 > 0;
-    if (!(neg && pos)) return true;
+  const hw = w / 2;
+  const minX = Math.floor(Math.min(x1, x2) - hw - 1);
+  const maxX = Math.ceil(Math.max(x1, x2) + hw + 1);
+  const minY = Math.floor(Math.min(y1, y2) - hw - 1);
+  const maxY = Math.ceil(Math.max(y1, y2) + hw + 1);
+  for (let y = minY; y <= maxY; y++) {
+    for (let x = minX; x <= maxX; x++) {
+      const tt = ((x - x1) * dx + (y - y1) * dy) / (len * len);
+      const tc = tt < 0 ? 0 : tt > 1 ? 1 : tt;
+      const pxp = x1 + dx * tc;
+      const pyp = y1 + dy * tc;
+      const d = Math.hypot(x - pxp, y - pyp);
+      if (d <= hw) setPx(x, y, rgb[0], rgb[1], rgb[2], 255);
+    }
   }
-  return false;
 }
 
-for (let y = 0; y < SIZE; y++) {
-  for (let x = 0; x < SIZE; x++) {
-    if (inArrow(x, y)) setPx(x, y, 255, 255, 255, 255);
+for (let i = 0; i < 6; i++) {
+  const a = -Math.PI / 2 + i * (Math.PI / 3);
+  const ux = Math.cos(a);
+  const uy = Math.sin(a);
+  const sx = cx + ux * 5;
+  const sy = cy + uy * 5;
+  const ex = cx + ux * R;
+  const ey = cy + uy * R;
+  drawSegment(sx, sy, ex, ey, 3, white);
+  for (const f of [0.55, 0.78]) {
+    const bx = cx + ux * R * f;
+    const by = cy + uy * R * f;
+    const blen = R * 0.32;
+    const ba = 0.85;
+    drawSegment(bx, by, bx + Math.cos(a + ba) * blen, by + Math.sin(a + ba) * blen, 2, white);
+    drawSegment(bx, by, bx + Math.cos(a - ba) * blen, by + Math.sin(a - ba) * blen, 2, white);
+  }
+}
+
+for (let y = -3; y <= 3; y++) {
+  for (let x = -3; x <= 3; x++) {
+    if (x * x + y * y <= 3 * 3) setPx(cx + x, cy + y, 255, 255, 255, 255);
   }
 }
 

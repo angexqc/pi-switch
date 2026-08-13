@@ -32,18 +32,12 @@ import {
   ThunderboltFilled,
   UpCircleFilled,
 } from '@ant-design/icons';
-import type { McpAggItem, PromptFile, PromptScope, SkillAggItem, SystemPromptInfo, Tool, ToolVersion } from '../../shared/types';
+import type { McpAggItem, PiPluginInfo, PromptFile, PromptScope, SkillAggItem, SystemPromptInfo, Tool, ToolVersion } from '../../shared/types';
 import { TOOL_COLORS, TOOL_LABELS } from '../constants';
 import { ToolIcon } from '../components/ToolIcon';
 
 const TOOLS: Tool[] = ['pi', 'claude', 'codex', 'opencode'];
 
-const UPGRADE_HINT: Record<Tool, string> = {
-  pi: 'npm update -g @earendil-works/pi-agent-core',
-  claude: 'claude update',
-  codex: 'codex update',
-  opencode: 'npm update -g opencode-ai',
-};
 
 
 export default function Extensions() {
@@ -123,7 +117,7 @@ function VersionsPanel() {
             return (
               <div key={v.tool} className="ps-version-card">
                 <div className="ps-version-head">
-                  <span className="ps-version-dot" style={{ background: TOOL_COLORS[v.tool] }} />
+                  <ToolIcon tool={v.tool} size={22} />
                   <b>{TOOL_LABELS[v.tool]}</b>
                 </div>
                 <div className="ps-version-num">{v.found ? <span className="mono">{v.version}</span> : <span className="ps-version-miss">{v.error || '未检测到'}</span>}</div>
@@ -150,7 +144,6 @@ function VersionsPanel() {
                     <Tag>无法判断</Tag>
                   )}
                 </div>
-                <div className="ps-version-cmd mono dim">{UPGRADE_HINT[v.tool]}</div>
                 {upd ? (
                   <Button
                     size="small"
@@ -626,8 +619,12 @@ function SkillsPanel() {
 
 function PluginsPanel() {
   const [plugins, setPlugins] = useState<string[]>([]);
+  const [versions, setVersions] = useState<PiPluginInfo[]>([]);
   const [newPkg, setNewPkg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [detecting, setDetecting] = useState(false);
+  const [upgrading, setUpgrading] = useState<string | null>(null);
+  const [result, setResult] = useState<{ ok: boolean; output?: string; error?: string } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -638,9 +635,19 @@ function PluginsPanel() {
     }
   }, []);
 
+  const detect = useCallback(async () => {
+    setDetecting(true);
+    try {
+      setVersions(await window.piswitch.getPiPluginVersions());
+    } finally {
+      setDetecting(false);
+    }
+  }, []);
+
   useEffect(() => {
     void load();
-  }, [load]);
+    void detect();
+  }, [load, detect]);
 
   const add = async () => {
     if (!newPkg.trim()) {
@@ -652,6 +659,7 @@ function PluginsPanel() {
       message.success('已加入插件列表（重启 pi 后生效）');
       setNewPkg('');
       await load();
+      await detect();
     } else {
       message.error(r.error);
     }
@@ -662,8 +670,37 @@ function PluginsPanel() {
     if (r.ok) {
       message.success('已移除');
       await load();
+      await detect();
     } else {
       message.error(r.error);
+    }
+  };
+
+  const upgradeOne = async (pkg: string) => {
+    setUpgrading(pkg);
+    setResult(null);
+    try {
+      const r = await window.piswitch.upgradePiPlugin(pkg);
+      setResult(r);
+      if (r.ok) message.success('插件升级完成');
+      else message.error('升级失败，查看输出');
+      await detect();
+    } finally {
+      setUpgrading(null);
+    }
+  };
+
+  const upgradeAll = async () => {
+    setUpgrading('all');
+    setResult(null);
+    try {
+      const r = await window.piswitch.upgradeAllPiPlugins();
+      setResult(r);
+      if (r.ok) message.success('全部插件升级完成');
+      else message.error('升级失败，查看输出');
+      await detect();
+    } finally {
+      setUpgrading(null);
     }
   };
 
@@ -673,7 +710,7 @@ function PluginsPanel() {
         <span className="ps-card-title">
           <AppstoreOutlined /> Pi Agent 插件（~/.pi/agent/settings.json → packages）
         </span>
-        <Space>
+        <Space wrap>
           <Input
             style={{ width: 300 }}
             placeholder="npm:@scope/pkg 或 pi-xxx"
@@ -684,22 +721,64 @@ function PluginsPanel() {
           <Button size="small" type="primary" icon={<PlusOutlined />} onClick={() => void add()}>
             添加
           </Button>
+          <Button size="small" icon={<ReloadOutlined />} loading={detecting} onClick={() => void detect()}>
+            刷新版本
+          </Button>
+          <Button size="small" icon={<CloudDownloadOutlined />} loading={upgrading === 'all'} onClick={() => void upgradeAll()}>
+            全部更新
+          </Button>
         </Space>
       </div>
       <div style={{ padding: '4px 16px 16px' }}>
-        {plugins.length === 0 ? (
+        {detecting && plugins.length === 0 ? (
+          <div style={{ padding: '16px 0', color: 'var(--ps-text-dim)' }}>正在检测插件版本…</div>
+        ) : plugins.length === 0 ? (
           <Empty description="未安装插件" style={{ padding: 24 }} />
         ) : (
           <div className="ps-plugin-list">
-            {plugins.map((p) => (
-              <div key={p} className="ps-plugin-item">
-                <span className="mono">{p}</span>
-                <Popconfirm title={`移除插件 ${p}？`} onConfirm={() => void remove(p)}>
-                  <Button size="small" type="text" danger icon={<DeleteOutlined />} />
-                </Popconfirm>
-              </div>
-            ))}
+            {plugins.map((p) => {
+              const info = versions.find((v) => v.name === p);
+              const upd = info?.updateAvailable === true;
+              return (
+                <div key={p} className="ps-plugin-item">
+                  <div style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <span className="mono">{p}</span>
+                    {info?.version && <Tag color="blue" style={{ marginInlineEnd: 0 }}>v{info.version}</Tag>}
+                    {upd ? <Tag color="orange" style={{ marginInlineEnd: 0 }}>新版本 {info.latest}</Tag> : info?.latest && info?.version ? <Tag color="green" style={{ marginInlineEnd: 0 }}>已最新</Tag> : null}
+                  </div>
+                  <Space size={2}>
+                    {upd && (
+                      <Button size="small" type="primary" loading={upgrading === p} onClick={() => void upgradeOne(p)}>
+                        更新
+                      </Button>
+                    )}
+                    <Popconfirm title={`移除插件 ${p}？`} onConfirm={() => void remove(p)}>
+                      <Button size="small" type="text" danger icon={<DeleteOutlined />} />
+                    </Popconfirm>
+                  </Space>
+                </div>
+              );
+            })}
           </div>
+        )}
+        {result && (
+          <pre
+            className="mono"
+            style={{
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-all',
+              maxHeight: 220,
+              overflow: 'auto',
+              background: 'var(--ps-surface-2)',
+              padding: 10,
+              borderRadius: 8,
+              fontSize: 11.5,
+              color: result.ok ? 'var(--ps-text)' : 'var(--ps-danger)',
+              marginTop: 10,
+            }}
+          >
+            {result.error || result.output}
+          </pre>
         )}
         <Typography.Text type="secondary" style={{ fontSize: 12 }}>
           插件以 npm 包形式安装，写入 packages 列表；重启 pi agent 后自动加载。

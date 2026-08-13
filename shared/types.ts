@@ -299,7 +299,7 @@ export interface SkillAggItem {
   /** true = 已安装到该 Agent */
   agents: Partial<Record<Tool, boolean>>;
 }
-export type SkillLocation = 'user' | 'claude' | 'codex' | 'opencode';
+export type SkillLocation = Tool;
 
 export interface SkillItem {
   location: SkillLocation;
@@ -327,6 +327,14 @@ export interface ToolVersion {
   /** true=有新版本 / false=已是最新 / undefined=无法判断 */
   updateAvailable?: boolean;
   error?: string;
+}
+
+/** Pi Agent 插件版本信息（~/.pi/agent/settings.json → packages） */
+export interface PiPluginInfo {
+  name: string;
+  version?: string; // npm 全局已安装版本
+  latest?: string; // registry 最新版本
+  updateAvailable?: boolean; // true=有新版本 / false=最新 / undefined=无法判断
 }
 
 export interface SystemPromptCandidate {
@@ -420,6 +428,9 @@ export interface PiswitchApi {
   getPiPlugins(): Promise<string[]>;
   addPiPlugin(pkg: string): Promise<{ ok: boolean; error?: string }>;
   removePiPlugin(pkg: string): Promise<{ ok: boolean; error?: string }>;
+  getPiPluginVersions(): Promise<PiPluginInfo[]>;
+  upgradePiPlugin(pkg: string): Promise<{ ok: boolean; output?: string; error?: string }>;
+  upgradeAllPiPlugins(): Promise<{ ok: boolean; output?: string; error?: string }>;
   getPromptFiles(): Promise<PromptFile[]>;
   readPromptFile(path: string): Promise<string>;
   savePromptFile(path: string, content: string): Promise<{ ok: boolean; error?: string }>;

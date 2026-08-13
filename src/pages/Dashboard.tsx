@@ -1,11 +1,12 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { Button, Card, Descriptions, Space, Tag, message } from 'antd';
 import { ReloadOutlined, RocketOutlined, SwapOutlined } from '@ant-design/icons';
-import type { StatsSummary, Tool, ToolStatus } from '../../shared/types';
+import type { HourlyAgg, StatsSummary, Tool, ToolStatus } from '../../shared/types';
 import { ConfigContext } from '../App';
 import StatCard from '../components/StatCard';
 import { TOOL_COLORS, TOOL_LABELS, fmtTokens, fmtUsd, modelLabel } from '../constants';
 import { ToolIcon } from '../components/ToolIcon';
+import EChart from '../components/EChart';
 
 const TOOLS: Tool[] = ['pi', 'codex', 'claude', 'opencode'];
 
@@ -13,11 +14,13 @@ export default function Dashboard() {
   const { config, setConfig } = useContext(ConfigContext);
   const [status, setStatus] = useState<ToolStatus[]>([]);
   const [summary, setSummary] = useState<StatsSummary | null>(null);
+  const [hourly, setHourly] = useState<HourlyAgg[]>([]);
   const [applying, setApplying] = useState(false);
 
   const load = () => {
     window.piswitch.getToolStatus().then(setStatus).catch(() => undefined);
     window.piswitch.getStatsSummary().then(setSummary).catch(() => undefined);
+    window.piswitch.getHourlyTrend().then(setHourly).catch(() => undefined);
   };
 
   useEffect(() => {
@@ -46,6 +49,35 @@ export default function Dashboard() {
   };
 
   const s = summary;
+
+  // 今日每小时用量柱状图（input+output+cacheRead+cacheWrite 总量）
+  const hourlyOption = useMemo(() => {
+    const data = hourly.map((d) => d.inputTokens + d.outputTokens + d.cacheReadTokens + d.cacheWriteTokens);
+    return {
+      tooltip: { trigger: 'axis' },
+      grid: { left: 48, right: 16, top: 24, bottom: 28 },
+      xAxis: {
+        type: 'category',
+        data: hourly.map((d) => `${String(d.hour).padStart(2, '0')}:00`),
+        axisLine: { lineStyle: { color: 'rgba(255,255,255,0.12)' } },
+        axisLabel: { color: '#9aa0a6' },
+      },
+      yAxis: {
+        type: 'value',
+        axisLabel: { color: '#9aa0a6' },
+        splitLine: { lineStyle: { color: 'rgba(255,255,255,0.08)' } },
+      },
+      series: [
+        {
+          name: 'Tokens',
+          type: 'bar',
+          barWidth: '55%',
+          data,
+          itemStyle: { color: '#0f6feb', borderRadius: [4, 4, 0, 0] },
+        },
+      ],
+    } as never;
+  }, [hourly]);
 
   return (
     <div className="page">
@@ -102,6 +134,10 @@ export default function Dashboard() {
         );
       })()}
 
+      <Card title="今日每小时用量" size="small" style={{ marginBottom: 16 }}>
+        <EChart option={hourlyOption} height={220} />
+      </Card>
+
       <div className="card-grid card-grid-2">
         <Card title="Agent 绑定状态" size="small">
           {status.map((st) => {
@@ -127,7 +163,7 @@ export default function Dashboard() {
                     children: (
                       <Space wrap>
                         {agent?.enabled && provider ? (
-                          <Tag color="blue">
+                          <Tag color="blue" style={{ maxWidth: 360, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline-block' }}>
                             {provider.name} / {modelName}
                           </Tag>
                         ) : (
@@ -158,7 +194,7 @@ export default function Dashboard() {
               { key: 'r', label: '累计请求数', children: s?.total.requests ?? '-' },
             ]}
           />
-          <Space style={{ marginTop: 8 }}>
+          <Space style={{ marginTop: 8 }} wrap>
             {TOOLS.map((t) => (
               <Button key={t} size="small" icon={<RocketOutlined />} onClick={() => window.piswitch.launchTool(t)}>
                 启动 {TOOL_LABELS[t]}

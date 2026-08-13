@@ -24,44 +24,50 @@ body {
 /* ---------- 主题变量 ---------- */
 :root,
 [data-theme='dark'] {
-  --ps-bg: #0a0e13;
-  --ps-surface: #10161d;
-  --ps-surface-2: #141c25;
-  --ps-border: #1e2a36;
-  --ps-border-strong: #2a3a4a;
-  --ps-text: #dbe6ee;
-  --ps-text-dim: #8394a3;
-  --ps-text-faint: #5c6b79;
-  --ps-accent: #35d0ba;
-  --ps-accent-soft: rgba(53, 208, 186, 0.14);
-  --ps-amber: #f5b942;
-  --ps-coral: #ff8a5c;
-  --ps-ice: #5b9dff;
-  --ps-danger: #ff6b6b;
-  --ps-ok: #5ee08a;
-  --ps-shadow: 0 10px 34px rgba(0, 0, 0, 0.45);
-  --ps-glow-accent: 0 0 0 1px rgba(53, 208, 186, 0.35), 0 0 18px rgba(53, 208, 186, 0.18);
+  --ps-bg: #15161b;
+  --ps-bg-gradient: linear-gradient(160deg, #15161b 0%, #1a212c 45%, #17242e 80%, #15161b 100%);
+  --ps-surface: rgba(255, 255, 255, 0.07);
+  --ps-surface-2: rgba(255, 255, 255, 0.11);
+  --ps-border: rgba(255, 255, 255, 0.12);
+  --ps-border-strong: rgba(255, 255, 255, 0.22);
+  --ps-sider-bg: rgba(28, 28, 32, 0.55);
+  --ps-code-bg: rgba(0, 0, 0, 0.28);
+  --ps-text: #f2f2f4;
+  --ps-text-dim: #a1a1aa;
+  --ps-text-faint: #71717b;
+  --ps-accent: #0f6feb;
+  --ps-accent-soft: rgba(15, 111, 235, 0.14);
+  --ps-amber: #d99328;
+  --ps-coral: #e45454;
+  --ps-ice: #75c4fe;
+  --ps-danger: #e45454;
+  --ps-ok: #23b26d;
+  --ps-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+  --ps-glow-accent: 0 0 0 1px rgba(15, 111, 235, 0.35), 0 0 18px rgba(15, 111, 235, 0.18);
   color-scheme: dark;
 }
 
 [data-theme='light'] {
-  --ps-bg: #f2f5f7;
-  --ps-surface: #ffffff;
-  --ps-surface-2: #f7fafb;
-  --ps-border: #dbe4ea;
-  --ps-border-strong: #c3d0da;
-  --ps-text: #18222c;
-  --ps-text-dim: #5b6b79;
-  --ps-text-faint: #8b99a5;
-  --ps-accent: #0f9d8a;
-  --ps-accent-soft: rgba(15, 157, 138, 0.12);
-  --ps-amber: #c98a1b;
-  --ps-coral: #d95f2b;
-  --ps-ice: #2f6fd6;
+  --ps-bg: #eef0f4;
+  --ps-bg-gradient: linear-gradient(160deg, #eef0f4 0%, #e7eef6 45%, #e6f0f4 80%, #eef0f4 100%);
+  --ps-surface: rgba(255, 255, 255, 0.62);
+  --ps-surface-2: rgba(255, 255, 255, 0.78);
+  --ps-border: rgba(0, 0, 0, 0.08);
+  --ps-border-strong: rgba(0, 0, 0, 0.16);
+  --ps-sider-bg: rgba(255, 255, 255, 0.6);
+  --ps-code-bg: rgba(255, 255, 255, 0.6);
+  --ps-text: #202127;
+  --ps-text-dim: #626772;
+  --ps-text-faint: #8b919c;
+  --ps-accent: #0f6feb;
+  --ps-accent-soft: rgba(15, 111, 235, 0.12);
+  --ps-amber: #b97c1f;
+  --ps-coral: #c04a3a;
+  --ps-ice: #2f80e6;
   --ps-danger: #d64545;
   --ps-ok: #1e9e50;
-  --ps-shadow: 0 10px 30px rgba(30, 45, 60, 0.12);
-  --ps-glow-accent: 0 0 0 1px rgba(15, 157, 138, 0.28), 0 0 14px rgba(15, 157, 138, 0.14);
+  --ps-shadow: 0 8px 28px rgba(30, 45, 60, 0.10);
+  --ps-glow-accent: 0 0 0 1px rgba(15, 111, 235, 0.28), 0 0 14px rgba(15, 111, 235, 0.14);
   color-scheme: light;
 }
 
@@ -74,9 +80,32 @@ body {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--ps-bg);
+  background: var(--ps-bg-gradient, var(--ps-bg));
   position: relative;
   overflow: hidden;
+}
+
+/* ---------- 背景光斑（右上品牌蓝 + 左下冰蓝，去紫改冷灰蓝） ---------- */
+.ps-app-shell::before,
+.ps-app-shell::after {
+  content: '';
+  position: absolute;
+  width: 560px;
+  height: 560px;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: 0;
+}
+.ps-app-shell::before {
+  top: -200px;
+  right: -140px;
+  background: rgba(15, 111, 235, 0.28);
+}
+.ps-app-shell::after {
+  bottom: -220px;
+  left: -160px;
+  background: rgba(75, 165, 216, 0.20);
 }
 
 
@@ -95,8 +124,9 @@ body {
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--ps-border);
-  background: color-mix(in srgb, var(--ps-surface) 72%, transparent);
-  backdrop-filter: blur(14px);
+  background: var(--ps-sider-bg, color-mix(in srgb, var(--ps-surface) 72%, transparent));
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
   padding: 14px 10px;
   gap: 4px;
 }
@@ -114,8 +144,8 @@ body {
   border-radius: 9px;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, var(--ps-accent), #1e9e8c);
-  color: #06121a;
+  background: linear-gradient(135deg, var(--ps-accent), #2684ff);
+  color: #ffffff;
   font-weight: 800;
   font-size: 15px;
   box-shadow: var(--ps-glow-accent);
@@ -141,7 +171,23 @@ body {
 .ps-nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  position: relative;
+  gap: 5px;
+}
+
+.ps-nav-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 42px;
+  border-radius: 7px;
+  background: var(--ps-accent);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--ps-accent) 24%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), height 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
 }
 
 .ps-nav-item {
@@ -155,21 +201,22 @@ body {
   font-size: 13.5px;
   cursor: pointer;
   user-select: none;
-  transition: all 0.16s ease;
+  position: relative;
+  z-index: 1;
   background: transparent;
+  transition: color 160ms ease, background-color 160ms ease;
   width: 100%;
   text-align: left;
 }
 
-.ps-nav-item:hover {
+.ps-nav-item:hover:not(.active) {
   color: var(--ps-text);
-  background: color-mix(in srgb, var(--ps-surface-2) 70%, transparent);
+  background: var(--ps-surface-2);
 }
 
 .ps-nav-item.active {
-  color: var(--ps-accent);
-  background: var(--ps-accent-soft);
-  border-color: color-mix(in srgb, var(--ps-accent) 32%, transparent);
+  color: #ffffff;
+  background: transparent;
   font-weight: 600;
 }
 
@@ -537,7 +584,6 @@ body {
   bottom: 0;
   width: 3px;
   background: var(--stat-color, var(--ps-accent));
-  box-shadow: 0 0 12px var(--stat-color, var(--ps-accent));
 }
 
 .ps-stat .label {
@@ -1398,4 +1444,58 @@ body {
   color: #fff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
   user-select: none;
+}
+
+/* ---------- 蓝色毛玻璃卡片：backdrop-filter + 内侧高光 + 14px 圆角 ---------- */
+.ps-card,
+.ps-stat,
+.ps-provider-card,
+.ps-version-card,
+.ps-skill-card {
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 8px 28px rgba(0, 0, 0, 0.12);
+}
+
+.ant-card,
+.ant-modal .ant-modal-content {
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 8px 28px rgba(0, 0, 0, 0.12) !important;
+}
+
+.ps-card,
+.ps-stat,
+.ps-provider-card {
+  border-radius: 14px;
+}
+
+.ps-provider-card:hover,
+.ps-card:hover {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 12px 36px rgba(0, 0, 0, 0.18);
+}
+
+/* ---------- Agent 配置卡标题栏不换行（codex 出现「推理」时不换行） ---------- */
+.ps-agent-config-card > .ps-card-head {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+.ps-agent-config-card > .ps-card-head .ps-card-title,
+.ps-agent-config-card > .ps-card-head .ant-space,
+.ps-agent-config-card > .ps-card-head .ant-space > * {
+  flex-shrink: 0;
+}
+.ps-bind-label,
+.ps-head-toggle .ps-bind-label {
+  white-space: nowrap;
+}
+
+/* ---------- 统计卡文案溢出 ---------- */
+.ps-stat .label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ps-stat .value {
+  overflow-wrap: break-word;
 }
